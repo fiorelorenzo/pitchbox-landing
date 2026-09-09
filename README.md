@@ -29,6 +29,9 @@ pick their own defaults.
 switches the primary call to action's wording between "request an invite" and "create
 an account", following the app host's own `registration_policy`. Flip it only once
 that policy is actually `open` - see `docs/self-hosting.md` in the product repository.
+Because `$env/static/public` is inlined at build time, a deployment takes it from the
+`PUBLIC_SIGNUP_OPEN` repository variable, which `deploy.yml` passes to the image build;
+changing it needs a new tag, not a container restart.
 
 ## Other commands
 

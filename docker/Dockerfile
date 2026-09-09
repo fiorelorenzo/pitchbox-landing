@@ -43,11 +43,18 @@ ARG APP_COMMIT=unknown
 ARG PUBLIC_LEGAL_NAME
 ARG PUBLIC_LEGAL_ADDRESS
 ARG PUBLIC_LEGAL_VAT
+# Whether the app host accepts a registration (#423). Build-time for the same reason
+# as the block above, and it mirrors the product's own `registration_policy`, which
+# lives in the app's database: this build cannot read it, so somebody has to keep the
+# two honest. Unset means the invite copy, which is where every self-host and every
+# fresh cloud deployment starts, so a fork that passes nothing gets the truthful page.
+ARG PUBLIC_SIGNUP_OPEN
 ENV APP_VERSION=${APP_VERSION} \
 	APP_COMMIT=${APP_COMMIT} \
 	PUBLIC_LEGAL_NAME=${PUBLIC_LEGAL_NAME} \
 	PUBLIC_LEGAL_ADDRESS=${PUBLIC_LEGAL_ADDRESS} \
-	PUBLIC_LEGAL_VAT=${PUBLIC_LEGAL_VAT}
+	PUBLIC_LEGAL_VAT=${PUBLIC_LEGAL_VAT} \
+	PUBLIC_SIGNUP_OPEN=${PUBLIC_SIGNUP_OPEN}
 
 RUN pnpm build
 

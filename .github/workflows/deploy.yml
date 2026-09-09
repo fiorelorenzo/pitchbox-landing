@@ -110,12 +110,17 @@ jobs:
           # page is public by design, the repository is not. A missing secret is an
           # empty build arg, which renders the block without that line rather than
           # failing, so a fork deploys fine.
+          # PUBLIC_SIGNUP_OPEN: a repository variable rather than a secret (it is
+          # visible on the rendered page anyway) and a variable rather than a literal
+          # here, so closing sign-up again is a settings change plus a re-tag instead
+          # of a code change. Unset means the invite copy.
           build-args: |
             APP_VERSION=${{ needs.verify-ci.outputs.version }}
             APP_COMMIT=${{ needs.verify-ci.outputs.sha }}
             PUBLIC_LEGAL_NAME=${{ secrets.PUBLIC_LEGAL_NAME }}
             PUBLIC_LEGAL_ADDRESS=${{ secrets.PUBLIC_LEGAL_ADDRESS }}
             PUBLIC_LEGAL_VAT=${{ secrets.PUBLIC_LEGAL_VAT }}
+            PUBLIC_SIGNUP_OPEN=${{ vars.PUBLIC_SIGNUP_OPEN }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.verify-ci.outputs.version }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.verify-ci.outputs.sha }}
