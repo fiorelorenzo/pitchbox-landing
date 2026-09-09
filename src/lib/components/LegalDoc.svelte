@@ -9,6 +9,7 @@
 	import { ENTITY_LABELS, LEGAL_ENTITY } from '$lib/legal-entity';
 	import { LEGAL, SUPPORT_EMAIL } from '$lib/legal';
 	import type { Locale } from '$lib/i18n';
+	import Seo from './Seo.svelte';
 
 	let { locale, doc }: { locale: Locale; doc: 'privacy' | 'terms' } = $props();
 
@@ -17,6 +18,8 @@
 	let labels = $derived(ENTITY_LABELS[locale]);
 	let home = $derived(locale === 'en' ? resolve('/') : resolve('/it'));
 </script>
+
+<Seo {locale} path="/{doc}" title={content.title} description={content.description} />
 
 <svelte:head>
 	<title>{content.title}</title>
