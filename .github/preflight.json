@@ -24,7 +24,14 @@
 		{
 			"id": "image",
 			"run": "scripts/ci-image-boot.sh",
-			"when": ["src/**", "static/**", "docker/**", "package.json", "pnpm-lock.yaml", "scripts/ci-image-boot.sh"],
+			"when": [
+				"src/**",
+				"static/**",
+				"docker/**",
+				"package.json",
+				"pnpm-lock.yaml",
+				"scripts/ci-image-boot.sh"
+			],
 			"why": "mirrors the main-only docker-boot job: builds the runtime image and proves /healthz serves the exact version and commit just built. Not run on every push locally, only when you want the same proof CI gets on merge",
 			"serial": true,
 			"lock": "pitchbox-landing-image"
