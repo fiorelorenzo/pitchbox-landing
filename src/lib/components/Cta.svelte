@@ -9,7 +9,7 @@
 </script>
 
 {#if variant === 'primary'}
-	<!-- cta.href is always an absolute https:// URL (REGISTER_URL, $lib/cta.ts), never an
+	<!-- cta.href is always an absolute https:// or mailto: URL ($lib/cta.ts), never an
 	     internal route, so it needs no resolve() - eslint can't prove that statically. -->
 	<!-- eslint-disable svelte/no-navigation-without-resolve -->
 	<a

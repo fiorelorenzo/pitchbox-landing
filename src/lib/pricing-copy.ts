@@ -13,6 +13,7 @@ export interface PricingContent {
 	description: string;
 	heading: string;
 	subhead: string;
+	inviteNote: string;
 	billingToggle: { monthly: string; annual: string; annualBadge: (percent: number) => string };
 	priceSuffix: { monthly: string; annual: string };
 	freePriceLabel: string;
@@ -43,6 +44,8 @@ export const PRICING_CONTENT: Record<Locale, PricingContent> = {
 		heading: 'Plans and pricing',
 		subhead:
 			'Self-host for free with no limits, or run the hosted edition on one of four plans. Every number below is the one the app itself enforces.',
+		inviteNote:
+			'Cloud sign-up is invite-only right now - every paid button opens an email asking for one.',
 		billingToggle: {
 			monthly: 'Monthly',
 			annual: 'Annual',
@@ -91,6 +94,8 @@ export const PRICING_CONTENT: Record<Locale, PricingContent> = {
 		heading: 'Piani e prezzi',
 		subhead:
 			"Installalo tu stesso gratis e senza limiti, oppure usa l'edizione hosted con uno dei quattro piani. Ogni numero qui sotto è lo stesso che l'app applica davvero.",
+		inviteNote:
+			"L'iscrizione al cloud è per ora solo su invito - ogni pulsante a pagamento apre un'email per richiederlo.",
 		billingToggle: {
 			monthly: 'Mensile',
 			annual: 'Annuale',

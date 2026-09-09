@@ -25,7 +25,7 @@ export const PUBLIC_ROUTES: readonly string[] = ['/', '/privacy', '/terms', '/pr
 export interface LandingContent {
 	title: string;
 	description: string;
-	hero: { heading: string; subhead: string };
+	hero: { heading: string; subhead: string; inviteNote: string };
 	loop: {
 		heading: string;
 		steps: [string, string, string];
@@ -58,7 +58,9 @@ export const CONTENT: Record<Locale, LandingContent> = {
 			'A self-hosted outreach agent for Reddit, Hacker News, Mastodon and LinkedIn. It researches and drafts, you send, nothing leaves without you.',
 		hero: {
 			heading: 'It researches and drafts. You send. Nothing leaves without you.',
-			subhead: 'A self-hosted outreach agent for Reddit, Hacker News, Mastodon and LinkedIn.'
+			subhead: 'A self-hosted outreach agent for Reddit, Hacker News, Mastodon and LinkedIn.',
+			inviteNote:
+				'Cloud sign-up is invite-only right now - the button opens an email asking for one. Self-hosting is open today, no invite needed.'
 		},
 		loop: {
 			heading: 'How it works',
@@ -123,7 +125,9 @@ export const CONTENT: Record<Locale, LandingContent> = {
 			'Un agente di outreach self-hosted per Reddit, Hacker News, Mastodon e LinkedIn. Ricerca e scrive le bozze, sei tu a inviare, niente esce senza il tuo consenso.',
 		hero: {
 			heading: 'Ricerca e scrive le bozze. Sei tu a inviare. Niente esce senza il tuo consenso.',
-			subhead: 'Un agente di outreach self-hosted per Reddit, Hacker News, Mastodon e LinkedIn.'
+			subhead: 'Un agente di outreach self-hosted per Reddit, Hacker News, Mastodon e LinkedIn.',
+			inviteNote:
+				"L'iscrizione al cloud è per ora solo su invito - il pulsante apre un'email per richiederlo. Il self-hosting è aperto da subito, senza bisogno di invito."
 		},
 		loop: {
 			heading: 'Come funziona',

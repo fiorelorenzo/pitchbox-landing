@@ -16,6 +16,7 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test": "vitest run",
+		"check:links": "node scripts/check-external-links.mjs",
 		"tokens:refresh": "node scripts/refresh-tokens.mjs",
 		"plans:refresh": "node scripts/refresh-plans.mjs"
 	},
