@@ -10,6 +10,7 @@
 	import { PUBLIC_SIGNUP_OPEN } from '$env/static/public';
 	import { APP_URL, CONTENT, DOCS_URL, GITHUB_URL } from '$lib/content';
 	import { primaryCta, secondaryCta } from '$lib/cta';
+	import { resolve } from '$app/paths';
 	import type { Locale } from '$lib/i18n';
 	import Cta from './Cta.svelte';
 
@@ -19,6 +20,10 @@
 	let signupOpen = $derived(PUBLIC_SIGNUP_OPEN === 'true');
 	let primary = $derived(primaryCta(locale, signupOpen));
 	let secondary = $derived(secondaryCta(locale));
+	// The two legal pages live on this host, one pair per locale, so unlike the three
+	// footer links above they are internal routes and do need resolve().
+	let privacyHref = $derived(locale === 'en' ? resolve('/privacy') : resolve('/it/privacy'));
+	let termsHref = $derived(locale === 'en' ? resolve('/terms') : resolve('/it/terms'));
 </script>
 
 <svelte:head>
@@ -79,6 +84,8 @@
 		<a href={APP_URL} class="hover:text-foreground hover:underline">{t.footer.app}</a>
 		<a href={DOCS_URL} class="hover:text-foreground hover:underline">{t.footer.docs}</a>
 		<a href={GITHUB_URL} class="hover:text-foreground hover:underline">{t.footer.github}</a>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
+		<a href={privacyHref} class="hover:text-foreground hover:underline">{t.footer.privacy}</a>
+		<a href={termsHref} class="hover:text-foreground hover:underline">{t.footer.terms}</a>
 	</footer>
-	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 </main>
