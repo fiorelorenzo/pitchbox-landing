@@ -1,11 +1,11 @@
 <script lang="ts">
 	/**
-	 * The one page this version ships (#422), rendered once per locale by
-	 * `/+page.svelte` and `/it/+page.svelte`. Everything it shows is settled by #423's
-	 * approved brief: the hero claims the human-in-the-loop boundary with the category
-	 * in the subhead, one section states the boundary plainly, two ways to run it
-	 * follow, and the footer links out. No pricing table, no testimonials, no
-	 * screenshots yet - those are #425's.
+	 * The one page this version ships (#422/#425), rendered once per locale by
+	 * `/+page.svelte` and `/it/+page.svelte`. Follows #423's approved brief's story in
+	 * order: the hero claims the human-in-the-loop boundary with the category in the
+	 * subhead, the loop and the in-page companion carry the real screenshots
+	 * (`docs/screenshots.md`), the boundary states what it never does, two ways to run
+	 * it follow, and the footer links out. Still no pricing table, no testimonials.
 	 */
 	import { PUBLIC_SIGNUP_OPEN } from '$env/static/public';
 	import { APP_URL, CONTENT, DOCS_URL, GITHUB_URL } from '$lib/content';
@@ -13,6 +13,7 @@
 	import { resolve } from '$app/paths';
 	import type { Locale } from '$lib/i18n';
 	import Cta from './Cta.svelte';
+	import Seo from './Seo.svelte';
 
 	let { locale }: { locale: Locale } = $props();
 
@@ -24,12 +25,16 @@
 	// footer links above they are internal routes and do need resolve().
 	let privacyHref = $derived(locale === 'en' ? resolve('/privacy') : resolve('/it/privacy'));
 	let termsHref = $derived(locale === 'en' ? resolve('/terms') : resolve('/it/terms'));
+	// The panel screenshot has the product's own copy baked into the pixels (the
+	// drafted comment, the button labels), so unlike the two Inbox shots - whose
+	// dashboard UI is English-only either way - it needs one file per locale.
+	let panelShot = $derived(
+		locale === 'it' ? '/screenshots/panel-it.webp' : '/screenshots/panel-en.webp'
+	);
+	let panelShotDims = $derived(locale === 'it' ? { w: 1024, h: 600 } : { w: 1024, h: 547 });
 </script>
 
-<svelte:head>
-	<title>{t.title}</title>
-	<meta name="description" content={t.description} />
-</svelte:head>
+<Seo {locale} path="/" title={t.title} description={t.description} />
 
 <main id="main" class="mx-auto max-w-3xl px-6 pt-16 pb-24">
 	<!-- Hero (#423, decided 2026-09-09): the trust framing carries the boundary claim,
@@ -45,6 +50,78 @@
 		<div class="mt-2 flex flex-wrap items-center gap-4">
 			<Cta cta={primary} variant="primary" />
 			<Cta cta={secondary} variant="secondary" />
+		</div>
+	</section>
+
+	<!-- The loop (#423's story, steps 1-3): real screenshots of the real Inbox, not
+	     mockups (`docs/screenshots.md`). `loading="lazy"` plus explicit width/height
+	     on every image below the hero keeps a cold cache from waiting on them - the
+	     hero itself ships no image at all. -->
+	<section class="mt-20 border-t border-border pt-12">
+		<h2 class="text-2xl font-semibold text-foreground">{t.loop.heading}</h2>
+		<ol class="mt-6 flex flex-col gap-3">
+			{#each t.loop.steps as step, i (step)}
+				<li class="flex items-baseline gap-3 text-base text-foreground">
+					<span class="text-sm font-semibold text-muted-foreground">{i + 1}</span>
+					{step}
+				</li>
+			{/each}
+		</ol>
+		<div class="mt-8 grid gap-6 sm:grid-cols-2">
+			<figure>
+				<img
+					src="/screenshots/inbox-draft.webp"
+					alt={t.loop.draftShotAlt}
+					width="1024"
+					height="683"
+					loading="lazy"
+					decoding="async"
+					class="w-full rounded-lg border border-border"
+				/>
+				<figcaption class="mt-2 text-sm text-muted-foreground">
+					{t.loop.draftShotCaption}
+				</figcaption>
+			</figure>
+			<figure>
+				<img
+					src="/screenshots/inbox-sent.webp"
+					alt={t.loop.sentShotAlt}
+					width="1024"
+					height="683"
+					loading="lazy"
+					decoding="async"
+					class="w-full rounded-lg border border-border"
+				/>
+				<figcaption class="mt-2 text-sm text-muted-foreground">{t.loop.sentShotCaption}</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<!-- The in-page companion (#423's story, step 3 of the narrative, step 2 of the
+	     page): the panel is the one screenshot nobody else has, so it gets its own
+	     section rather than a bullet, with the boundary stated next to it rather than
+	     only in the section below. -->
+	<section class="mt-20 border-t border-border pt-12">
+		<h2 class="text-2xl font-semibold text-foreground">{t.companion.heading}</h2>
+		<div class="mt-6 grid gap-8 sm:grid-cols-2 sm:items-center">
+			<div class="flex flex-col gap-4">
+				<p class="text-base text-foreground">{t.companion.body}</p>
+				<p class="text-sm text-muted-foreground">{t.companion.boundary}</p>
+			</div>
+			<figure>
+				<img
+					src={panelShot}
+					alt={t.companion.shotAlt}
+					width={panelShotDims.w}
+					height={panelShotDims.h}
+					loading="lazy"
+					decoding="async"
+					class="w-full rounded-lg border border-border"
+				/>
+				<figcaption class="mt-2 text-sm text-muted-foreground">
+					{t.companion.shotCaption}
+				</figcaption>
+			</figure>
 		</div>
 	</section>
 
