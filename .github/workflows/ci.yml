@@ -1,0 +1,165 @@
+# The deploy workflow refuses to release a tag whose CI run here did not complete
+# successfully, so job names are written for a human scanning the Actions tab rather
+# than for brevity.
+#
+# Adapted from canonry-landing's .github/workflows/ci.yml (~/projects/personal/canonry-landing,
+# the reference implementation named in #422): this landing has no database, so
+# docker-boot needs no Postgres service and there is no waitlist form to exercise --
+# scripts/ci-image-boot.sh only proves the image boots and /healthz serves the exact
+# version and commit just built.
+#
+# Three tiers: `changes` scopes a PR to whether this app's own paths moved at all,
+# `test` is the PR-path gate (lint, typecheck, unit tests, build), and `docker-boot`
+# (the image build + served-health proof) only runs on push to main, because nobody
+# should wait on a docker build before merging. `ci` is the one job a human or another
+# workflow should ever look at; `deploy.yml`'s verify-ci.sh checks this workflow's
+# overall run conclusion for a commit, not any one job inside it, so gating jobs behind
+# `changes` or `docker-boot` behind `push` does not change what that gate sees.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# Node version pinned here must track .node-version; pnpm/setup has no
+# node-version-file input.
+env:
+  NODE_VERSION: 22.22.3
+
+jobs:
+  # PR-only. dorny/paths-filter answers from the API on a pull_request, so this job
+  # needs no checkout and costs a few seconds. Deliberately not used on push: main
+  # always runs the full suite, which also spares us the fetch-depth: 0 that filtering
+  # a push would require.
+  changes:
+    name: changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Job-level permissions replace the workflow-level block rather than merging with
+    # it, so contents: read is repeated here. dorny/paths-filter lists the PR's changed
+    # files through the GitHub API (no checkout, by design), which needs
+    # pull-requests: read. Every other job stays on the workflow-level contents: read
+    # only.
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      app: ${{ steps.filter.outputs.app }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            app:
+              - 'src/**'
+              - 'static/**'
+              - 'scripts/**'
+              - 'docker/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'svelte.config.js'
+              - 'vite.config.ts'
+              - 'tsconfig.json'
+              - 'eslint.config.js'
+              - 'prettier.config.js'
+              - '.node-version'
+
+  test:
+    name: Lint, typecheck, test, build
+    # needs: changes; `!cancelled()` is required, not decoration: changes is skipped on
+    # push (its own if is PR-only), and a job whose needs was skipped is
+    # cascade-skipped by GitHub Actions regardless of its own if unless that if
+    # contains a status-check function like !cancelled() -- without it, push to main
+    # silently ran nothing. !cancelled() rather than always(): both defeat the
+    # cascade-skip, but always() also keeps a job running after someone cancels the
+    # run, wasting the runner slot.
+    needs: changes
+    if: ${{ !cancelled() && (github.event_name == 'push' || needs.changes.outputs.app == 'true') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@${{ env.NODE_VERSION }}
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm check
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  # Heavy: docker build, a booted container. Main-only (see this file's header
+  # comment); reproduced locally by `preflight`'s "image" check (.github/preflight.json),
+  # which runs the same scripts/ci-image-boot.sh.
+  docker-boot:
+    name: Build image, verify served health
+    runs-on: ubuntu-latest
+    needs: [changes, test]
+    if: ${{ !cancelled() && github.event_name != 'pull_request' }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm and Node
+        uses: pnpm/setup@v2
+        with:
+          runtime: node@${{ env.NODE_VERSION }}
+          cache: true
+          install: false
+
+      - name: Build, boot, and verify the image
+        env:
+          CONTAINER_NAME: pitchbox-landing-ci
+          IMAGE_TAG: pitchbox-landing:ci
+        run: scripts/ci-image-boot.sh
+
+      - name: Container logs
+        if: always()
+        run: docker logs pitchbox-landing-ci || true
+
+      - name: Stop container
+        if: always()
+        run: docker rm -f pitchbox-landing-ci || true
+
+  # The single job worth looking at. `skipped` counts as passing: a docs-only PR skips
+  # `test` and `docker-boot` never runs on a PR at all, and this still goes green
+  # because the filter already proved there was nothing for either to say.
+  ci:
+    name: ci
+    if: always()
+    needs: [changes, test, docker-boot]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: A needed job failed or was cancelled
+        run: |
+          printf '%s\n' '${{ toJSON(needs) }}'
+          printf '%s' '${{ toJSON(needs) }}' | jq -e '
+            to_entries
+            | map(select(.value.result == "failure" or .value.result == "cancelled"))
+            | length == 0'

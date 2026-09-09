@@ -1,0 +1,44 @@
+# Deployed-stack compose file for prodbox, same relationship to docker/compose.yml
+# that canonry-landing's own docker/deploy/compose.deploy.yml has to its
+# docker/compose.yml (~/projects/personal/canonry-landing, the reference
+# implementation named in #422): `image:` instead of `build:`, because the build
+# happens once on a GitHub-hosted runner (.github/workflows/deploy.yml) and this file
+# only ever runs on prodbox's self-hosted runner via scripts/deploy/release.sh.
+#
+# No database and no mail sender: this landing's only way in is an account on
+# app.pitchbox.app (decided on #423), so there is nothing here worth a second
+# container or a named volume. One immutable copy of this file lives in every
+# releases/<sha> directory (release.sh copies it in verbatim at deploy time), so a
+# release's compose definition can never drift after the fact.
+#
+# LANDING_IMAGE, APP_VERSION and APP_COMMIT are written into each release's own .env by
+# release.sh, never edited by hand. ORIGIN comes from the stack's shared secrets file
+# (shared/secrets.env), managed on prodbox out of band and never generated or printed
+# by any script here.
+#
+# No top-level `name:` here on purpose: every invocation of this file MUST pass
+# --project-name pitchbox-landing-<stack> (scripts/deploy/lib.sh's compose_cmd does
+# this always). Without it, a second stack on this box (127.0.0.1:5284, reserved -
+# see docker/Caddyfile.example) would default to the same project name and collide.
+
+services:
+  landing:
+    image: ${LANDING_IMAGE}
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${LANDING_PORT:-5184}:5184'
+    environment:
+      PORT: '5184'
+      ORIGIN: ${ORIGIN}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          'fetch("http://127.0.0.1:5184/healthz").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))'
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
