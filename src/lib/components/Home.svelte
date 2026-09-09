@@ -36,6 +36,11 @@
 
 <Seo {locale} path="/" title={t.title} description={t.description} />
 
+<svelte:head>
+	<title>{t.title}</title>
+	<meta name="description" content={t.description} />
+</svelte:head>
+
 <main id="main" class="mx-auto max-w-3xl px-6 pt-16 pb-24">
 	<!-- Hero (#423, decided 2026-09-09): the trust framing carries the boundary claim,
 	     the subhead carries the category and the four platforms. Sized against the
