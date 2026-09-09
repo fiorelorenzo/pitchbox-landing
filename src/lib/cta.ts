@@ -9,6 +9,7 @@
  * languages, nothing else decides which copy ships.
  */
 import type { Locale } from './i18n';
+import type { PlanId } from './plans';
 
 export interface CtaLink {
 	label: string;
@@ -43,4 +44,30 @@ export function primaryCta(locale: Locale, signupOpen: boolean): CtaLink {
  * primary and unaffected by the signup flag. */
 export function secondaryCta(locale: Locale): CtaLink {
 	return { label: SECONDARY_LABEL[locale], href: QUICKSTART_URL };
+}
+
+const PLAN_LABEL: Record<
+	Locale,
+	{ invite: (name: string) => string; open: (name: string) => string }
+> = {
+	en: { invite: (name) => `Request an invite for ${name}`, open: (name) => `Start with ${name}` },
+	it: { invite: (name) => `Richiedi un invito per ${name}`, open: (name) => `Inizia con ${name}` }
+};
+
+/** One CTA per pricing-page column (#558): same registration destination and
+ * invite/open switch as `primaryCta`, but the label names the plan and the URL
+ * carries `plan`/`interval` so `/register` can preselect Checkout for it
+ * (`app.pitchbox.app`'s own `/register?plan=growth` handling). Free has no
+ * Checkout to preselect - callers use `primaryCta` for that column instead. */
+export function planCta(
+	locale: Locale,
+	signupOpen: boolean,
+	planId: Exclude<PlanId, 'free'>,
+	planName: string,
+	interval: 'month' | 'year'
+): CtaLink {
+	const label = signupOpen
+		? PLAN_LABEL[locale].open(planName)
+		: PLAN_LABEL[locale].invite(planName);
+	return { label, href: `${REGISTER_URL}?plan=${planId}&interval=${interval}` };
 }

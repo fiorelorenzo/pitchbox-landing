@@ -14,14 +14,14 @@
 	<!-- eslint-disable svelte/no-navigation-without-resolve -->
 	<a
 		href={cta.href}
-		class="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
+		class="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-3 text-center text-sm font-semibold text-primary-foreground hover:opacity-90"
 	>
 		{cta.label}
 	</a>
 {:else}
 	<a
 		href={cta.href}
-		class="rounded-lg border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground hover:bg-secondary"
+		class="inline-flex items-center justify-center rounded-lg border border-border bg-card px-5 py-3 text-center text-sm font-semibold text-foreground hover:bg-secondary"
 	>
 		{cta.label}
 	</a>

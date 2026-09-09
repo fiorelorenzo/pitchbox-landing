@@ -20,7 +20,7 @@ export const APP_URL = 'https://app.pitchbox.app';
  * entry here and both locales' URLs follow automatically. `/privacy` and `/terms`
  * are listed even though their routes belong to #427: they exist on `main` already
  * and are public, so a sitemap that omitted them would be wrong on day one. */
-export const PUBLIC_ROUTES: readonly string[] = ['/', '/privacy', '/terms'];
+export const PUBLIC_ROUTES: readonly string[] = ['/', '/privacy', '/terms', '/pricing'];
 
 export interface LandingContent {
 	title: string;
@@ -48,7 +48,7 @@ export interface LandingContent {
 		cloud: { heading: string; body: string };
 	};
 	footer: { app: string; docs: string; github: string; privacy: string; terms: string };
-	nav: { skipToContent: string; wordmark: string; switchLanguage: string };
+	nav: { skipToContent: string; wordmark: string; pricing: string; switchLanguage: string };
 }
 
 export const CONTENT: Record<Locale, LandingContent> = {
@@ -113,6 +113,7 @@ export const CONTENT: Record<Locale, LandingContent> = {
 		nav: {
 			skipToContent: 'Skip to content',
 			wordmark: 'Pitchbox',
+			pricing: 'Pricing',
 			switchLanguage: 'Italiano'
 		}
 	},
@@ -177,6 +178,7 @@ export const CONTENT: Record<Locale, LandingContent> = {
 		nav: {
 			skipToContent: 'Vai al contenuto',
 			wordmark: 'Pitchbox',
+			pricing: 'Prezzi',
 			switchLanguage: 'English'
 		}
 	}
