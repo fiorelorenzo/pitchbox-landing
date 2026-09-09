@@ -22,6 +22,7 @@ die() {
 }
 
 require_cmd() {
+	local cmd
 	for cmd in "$@"; do
 		command -v "$cmd" >/dev/null 2>&1 || die "required command not found: $cmd"
 	done
@@ -30,6 +31,7 @@ require_cmd() {
 # require_env NAME - fails if the named variable is unset or empty. Never echoes the
 # value, so a secret-bearing variable is still safe to pass here.
 require_env() {
+	local name
 	for name in "$@"; do
 		if [ -z "${!name:-}" ]; then
 			die "required environment variable is not set: $name"
@@ -44,6 +46,7 @@ require_env() {
 # and renaming it over the destination is atomic (rename(2) on the same filesystem),
 # which is what "flipped atomically" means below.
 atomic_symlink() {
+	local target link_path tmp_link
 	target="$1"
 	link_path="$2"
 	tmp_link="${link_path}.tmp.$$"
@@ -60,6 +63,7 @@ release_dir() {
 
 # current_release BASE -> sha, or empty if no current symlink exists yet
 current_release() {
+	local base
 	base="$1"
 	if [ -L "$base/current" ]; then
 		basename "$(readlink -f "$base/current")"
@@ -73,12 +77,14 @@ current_release() {
 # copies it in alongside compose.yml), and those need their execute bit to still run.
 # The extra x bit on non-script files (compose.yml, .env) is inert.
 lock_release() {
+	local dir
 	dir="$1"
 	find "$dir" -type f -exec chmod 0550 {} +
 	find "$dir" -type d -exec chmod 0550 {} +
 }
 
 unlock_release() {
+	local dir
 	dir="$1"
 	find "$dir" -type d -exec chmod u+w {} +
 	find "$dir" -type f -exec chmod u+w {} +
@@ -89,6 +95,7 @@ unlock_release() {
 # project name stays stable across releases, while the compose file and its .env come
 # from whichever release directory is passed in.
 compose_cmd() {
+	local stack release
 	stack="$1"
 	release="$2"
 	shift 2
@@ -105,6 +112,8 @@ compose_cmd() {
 # enough: a green curl has served a stale build before, so the served version is
 # compared against the artifact this run actually built.
 poll_health() {
+	local url expected_version expected_commit timeout_s interval_s
+	local deadline last_body last_error served_version served_commit served_status
 	url="$1"
 	expected_version="$2"
 	expected_commit="$3"
@@ -145,6 +154,7 @@ poll_health() {
 # --- DEPLOYED.json --------------------------------------------------------
 # write_deployed_json PATH STACK RELEASE VERSION COMMIT IMAGE DEPLOYED_BY PREVIOUS STATUS [NOTE]
 write_deployed_json() {
+	local path stack release version commit image deployed_by previous status note
 	path="$1" stack="$2" release="$3" version="$4" commit="$5"
 	image="$6" deployed_by="$7" previous="$8" status="$9" note="${10:-}"
 
@@ -190,6 +200,7 @@ deploy_marker() {
 
 # write_deploy_marker PATH STACK SHA VERSION IMAGE FROM_RELEASE
 write_deploy_marker() {
+	local path stack sha version image from_release
 	path="$1" stack="$2" sha="$3" version="$4" image="$5" from_release="$6"
 	jq -n \
 		--arg stack "$stack" \
@@ -219,6 +230,8 @@ clear_deploy_marker() {
 # whatever DEPLOYED.json still records as the last confirmed release -- exactly
 # rollback.sh's own primitive -- before this run's real work begins.
 recover_from_crashed_deploy() {
+	local base stack port timeout interval deployed_by
+	local marker deployed_json last_good last_good_version last_good_commit last_good_image url
 	base="$1" stack="$2" port="$3" timeout="$4" interval="$5" deployed_by="$6"
 	marker="$(deploy_marker "$base")"
 	[ -f "$marker" ] || return 0
