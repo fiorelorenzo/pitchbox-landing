@@ -46,12 +46,9 @@
 	<!-- The boundary, as its own section rather than a footnote (#423's story, step 4). -->
 	<section class="mt-20 border-t border-border pt-12">
 		<h2 class="text-2xl font-semibold text-foreground">{t.boundary.heading}</h2>
-		<ul class="mt-6 flex flex-col gap-4">
+		<ul class="mt-6 flex list-disc flex-col gap-4 pl-5 marker:text-muted-foreground">
 			{#each t.boundary.items as item (item)}
-				<li class="flex gap-3 text-base text-foreground">
-					<span aria-hidden="true" class="mt-1 text-muted-foreground">-</span>
-					<span>{item}</span>
-				</li>
+				<li class="text-base text-foreground">{item}</li>
 			{/each}
 		</ul>
 	</section>
