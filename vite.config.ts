@@ -11,6 +11,12 @@ import { sveltekit } from '@sveltejs/kit/vite';
 // whatever `$env/static/public` would otherwise do with a genuinely missing variable.
 process.env.PUBLIC_SIGNUP_OPEN ??= 'false';
 
+// Same reasoning, same mechanism, for the app-path redirect (#422 follow-up, the apex
+// flip): a self-hoster who forks this repo may run the app on a different host, so the
+// default has to be overridable and still has to exist before src/hooks.server.ts's
+// own `$env/static/public` import resolves.
+process.env.PUBLIC_APP_ORIGIN ??= 'https://app.pitchbox.app';
+
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
