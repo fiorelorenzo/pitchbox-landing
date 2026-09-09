@@ -1,0 +1,38 @@
+# Local/dev stack for this repository. No database and no mail sender: the landing's
+# only way in is an account on app.pitchbox.app (decided on #423), so there is nothing
+# here to migrate or seed. A developer who only clones this repository gets a complete
+# local stack from this one file and one command.
+#
+# Run from the repo root:
+#   docker compose -f docker/compose.yml up -d --build
+name: pitchbox-landing-dev
+
+services:
+  landing:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        APP_VERSION: ${APP_VERSION:-0.0.0-dev}
+        APP_COMMIT: ${APP_COMMIT:-unknown}
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:5184:5184'
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      PORT: '5184'
+      ORIGIN: ${ORIGIN:-http://127.0.0.1:5184}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          'fetch("http://127.0.0.1:5184/healthz").then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))'
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
