@@ -4,9 +4,11 @@
 #
 # Adapted from canonry-landing's .github/workflows/ci.yml (~/projects/personal/canonry-landing,
 # the reference implementation named in #422): this landing has no database, so
-# docker-boot needs no Postgres service and there is no waitlist form to exercise --
-# scripts/ci-image-boot.sh only proves the image boots and /healthz serves the exact
-# version and commit just built.
+# docker-boot needs no Postgres service and there is no waitlist form to exercise.
+# `test` also checks every cross-origin URL the CTAs point at (#428), and
+# `scripts/ci-image-boot.sh` proves both the image boots with /healthz serving the
+# exact version and commit just built, and that every route named in the sitemap
+# actually renders in the right locale (#430).
 #
 # Three tiers: `changes` scopes a PR to whether this app's own paths moved at all,
 # `test` is the PR-path gate (lint, typecheck, unit tests, build), and `docker-boot`
@@ -112,11 +114,19 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Issue #428: the CTAs cross a host boundary the moment a visitor acts on them,
+      # and no unit test can reach a page this repository does not build. The only
+      # step here that needs the public internet; a failure reads as "what we point at
+      # is down", worth a red build on a page whose whole job is getting someone
+      # somewhere real.
+      - name: Every external link off this site resolves
+        run: pnpm check:links
+
   # Heavy: docker build, a booted container. Main-only (see this file's header
   # comment); reproduced locally by `preflight`'s "image" check (.github/preflight.json),
   # which runs the same scripts/ci-image-boot.sh.
   docker-boot:
-    name: Build image, verify served health
+    name: Build image, verify served health and every public route (#430)
     runs-on: ubuntu-latest
     needs: [changes, test]
     if: ${{ !cancelled() && github.event_name != 'pull_request' }}
@@ -132,7 +142,7 @@ jobs:
           cache: true
           install: false
 
-      - name: Build, boot, and verify the image
+      - name: Build, boot, and verify the image and every public route
         env:
           CONTAINER_NAME: pitchbox-landing-ci
           IMAGE_TAG: pitchbox-landing:ci

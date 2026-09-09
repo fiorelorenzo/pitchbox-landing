@@ -92,6 +92,9 @@
 	<section class="flex flex-col gap-4">
 		<h1 class="text-4xl font-semibold text-balance text-foreground sm:text-5xl">{t.heading}</h1>
 		<p class="max-w-2xl text-lg text-muted-foreground">{t.subhead}</p>
+		{#if !signupOpen}
+			<p class="max-w-2xl text-sm text-muted-foreground">{t.inviteNote}</p>
+		{/if}
 	</section>
 
 	<div

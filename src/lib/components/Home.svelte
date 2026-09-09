@@ -56,6 +56,9 @@
 			<Cta cta={primary} variant="primary" />
 			<Cta cta={secondary} variant="secondary" />
 		</div>
+		{#if !signupOpen}
+			<p class="max-w-xl text-sm text-muted-foreground">{t.hero.inviteNote}</p>
+		{/if}
 	</section>
 
 	<!-- The loop (#423's story, steps 1-3): real screenshots of the real Inbox, not

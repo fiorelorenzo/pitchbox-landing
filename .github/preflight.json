@@ -4,7 +4,7 @@
 	"checks": [
 		{
 			"id": "test",
-			"run": "pnpm install --frozen-lockfile && pnpm lint && pnpm check && pnpm test && pnpm build",
+			"run": "pnpm install --frozen-lockfile && pnpm lint && pnpm check && pnpm test && pnpm build && pnpm check:links",
 			"when": [
 				"src/**",
 				"static/**",
@@ -19,7 +19,7 @@
 				"prettier.config.js",
 				".node-version"
 			],
-			"why": "mirrors the PR-path test job: lint, typecheck, unit tests and build"
+			"why": "mirrors the PR-path test job: lint, typecheck, unit tests, build, and the external link check (#428)"
 		},
 		{
 			"id": "image",
@@ -32,7 +32,7 @@
 				"pnpm-lock.yaml",
 				"scripts/ci-image-boot.sh"
 			],
-			"why": "mirrors the main-only docker-boot job: builds the runtime image and proves /healthz serves the exact version and commit just built. Not run on every push locally, only when you want the same proof CI gets on merge",
+			"why": "mirrors the main-only docker-boot job: builds the runtime image, proves /healthz serves the exact version and commit just built, and proves every public route in the sitemap renders with the right locale (#430). Not run on every push locally, only when you want the same proof CI gets on merge",
 			"serial": true,
 			"lock": "pitchbox-landing-image"
 		}
