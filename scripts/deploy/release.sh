@@ -92,6 +92,11 @@ secrets_file="${secrets_file:-$base/shared/secrets.env}"
 
 deployed_json="$base/DEPLOYED.json"
 
+# A previous run may have died between its own symlink flip and its health gate
+# resolving it (lib.sh's own comment on this explains why); recover to whatever
+# DEPLOYED.json still records as last confirmed before this run touches anything.
+recover_from_crashed_deploy "$base" "$stack" "$port" "$timeout" "$interval" "$deployed_by"
+
 # Capture what is live before touching anything, so a failed gate has something
 # concrete to roll back to.
 prev_release="" prev_version="" prev_commit="" prev_image=""
@@ -126,6 +131,12 @@ cp -r "$script_dir" "$new_dir/scripts/deploy"
 
 lock_release "$new_dir"
 
+# Write the intent before the flip, not after the gate: if this process dies between
+# here and the gate resolving below, the marker is what tells the next run to recover
+# before doing its own work, instead of silently trusting a DEPLOYED.json that no
+# longer matches what is actually running.
+write_deploy_marker "$(deploy_marker "$base")" "$stack" "$sha" "$version" "$image" "$prev_release"
+
 log "flipping $base/current to releases/$sha"
 atomic_symlink "releases/$sha" "$base/current"
 
@@ -147,6 +158,7 @@ if [ "$gate_ok" -eq 0 ]; then
 	log "health gate passed, release $sha is live for stack $stack"
 	write_deployed_json "$deployed_json" "$stack" "$sha" "$version" "$sha" \
 		"$image" "$deployed_by" "$prev_release" "healthy" ""
+	clear_deploy_marker "$base"
 	"$script_dir/prune-releases.sh" --base "$base" --keep "$keep"
 	exit 0
 fi
@@ -156,6 +168,7 @@ log "health gate FAILED for release $sha, rolling back"
 if [ -z "$prev_release" ] || [ ! -d "$(release_dir "$base" "$prev_release")" ]; then
 	write_deployed_json "$deployed_json" "$stack" "$sha" "$version" "$sha" \
 		"$image" "$deployed_by" "$prev_release" "failed" "no previous healthy release to roll back to -- stack $stack is left on the failed release, inspect manually"
+	clear_deploy_marker "$base"
 	log "CRITICAL: no previous release to roll back to -- stack $stack is left on failed release $sha"
 	exit 1
 fi
@@ -166,6 +179,7 @@ compose_cmd "$stack" "$base/current" up -d --remove-orphans || log "rollback com
 
 write_deployed_json "$deployed_json" "$stack" "$prev_release" "$prev_version" "$prev_commit" \
 	"$prev_image" "$deployed_by" "$sha" "rolled_back" "auto-rollback: release $sha ($version) failed the health gate"
+clear_deploy_marker "$base"
 
 log "rolled back to $prev_release ($prev_version), failing this run"
 exit 1

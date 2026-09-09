@@ -173,3 +173,77 @@ write_deployed_json() {
 		}' >"$path.tmp.$$"
 	mv -T "$path.tmp.$$" "$path"
 }
+
+# --- crash-safe flip ------------------------------------------------------
+# A run that dies between the symlink flip and the health gate resolving it (a
+# killed SSH session, a runner that lost its box) leaves `current` pointing at an
+# unverified release while DEPLOYED.json still claims the previous one is healthy --
+# a real incident, first hit and manually recovered from while proving #422. These
+# three functions turn that window into a state machine that cannot lie: write the
+# intent before the flip, and only clear it once some gate (this run's own, or a
+# later recovery's) has actually confirmed what is serving.
+
+# deploy_marker BASE -> path
+deploy_marker() {
+	printf '%s/DEPLOYING.json' "$1"
+}
+
+# write_deploy_marker PATH STACK SHA VERSION IMAGE FROM_RELEASE
+write_deploy_marker() {
+	path="$1" stack="$2" sha="$3" version="$4" image="$5" from_release="$6"
+	jq -n \
+		--arg stack "$stack" \
+		--arg sha "$sha" \
+		--arg version "$version" \
+		--arg image "$image" \
+		--arg from_release "$from_release" \
+		--arg started_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+		'{
+			stack: $stack,
+			sha: $sha,
+			version: $version,
+			image: $image,
+			from_release: (if $from_release == "" then null else $from_release end),
+			started_at: $started_at
+		}' >"$path.tmp.$$"
+	mv -T "$path.tmp.$$" "$path"
+}
+
+clear_deploy_marker() {
+	rm -f "$(deploy_marker "$1")"
+}
+
+# recover_from_crashed_deploy BASE STACK PORT TIMEOUT INTERVAL DEPLOYED_BY
+# Call this before a release.sh run touches anything else. A no-op unless a marker
+# from a previous, unfinished run is present, in which case it rolls back to
+# whatever DEPLOYED.json still records as the last confirmed release -- exactly
+# rollback.sh's own primitive -- before this run's real work begins.
+recover_from_crashed_deploy() {
+	base="$1" stack="$2" port="$3" timeout="$4" interval="$5" deployed_by="$6"
+	marker="$(deploy_marker "$base")"
+	[ -f "$marker" ] || return 0
+
+	log "found $marker from an unfinished previous run -- it died between the symlink flip and the health gate, recovering before continuing"
+	deployed_json="$base/DEPLOYED.json"
+	[ -f "$deployed_json" ] || die "crash marker present but no $deployed_json to recover to -- inspect $base manually"
+
+	last_good=$(jq -r '.release // empty' "$deployed_json")
+	last_good_version=$(jq -r '.version // empty' "$deployed_json")
+	last_good_commit=$(jq -r '.commit // empty' "$deployed_json")
+	last_good_image=$(jq -r '.image // empty' "$deployed_json")
+	[ -n "$last_good" ] || die "crash marker present but $deployed_json has no release recorded -- inspect $base manually"
+
+	log "recovering stack $stack to last confirmed release $last_good ($last_good_version)"
+	atomic_symlink "releases/$last_good" "$base/current"
+	compose_cmd "$stack" "$base/current" up -d --remove-orphans || log "recovery compose up failed -- inspect $base manually"
+
+	url="http://127.0.0.1:${port}/healthz"
+	if poll_health "$url" "$last_good_version" "$last_good_commit" "$timeout" "$interval"; then
+		log "recovery complete: stack $stack confirmed serving $last_good ($last_good_version)"
+		write_deployed_json "$deployed_json" "$stack" "$last_good" "$last_good_version" "$last_good_commit" \
+			"$last_good_image" "$deployed_by" "$last_good" "healthy" "auto-recovered from a crashed run that died mid-flip"
+	else
+		log "CRITICAL: recovery rollback to $last_good did not pass the health gate either -- inspect $base manually"
+	fi
+	rm -f "$marker"
+}

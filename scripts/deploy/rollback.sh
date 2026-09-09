@@ -73,6 +73,11 @@ target_version=$(grep -m1 '^APP_VERSION=' "$target_dir/.env" | cut -d= -f2-)
 target_commit=$(grep -m1 '^APP_COMMIT=' "$target_dir/.env" | cut -d= -f2-)
 target_image=$(grep -m1 '^LANDING_IMAGE=' "$target_dir/.env" | cut -d= -f2-)
 
+# Same crash-safety shape as release.sh: if this process dies between the flip and
+# the gate below, the marker tells the next release.sh (or a rerun of this script)
+# to recover before doing anything else, instead of trusting a stale DEPLOYED.json.
+write_deploy_marker "$(deploy_marker "$base")" "$stack" "$to" "$target_version" "$target_image" "$from_release"
+
 log "rolling back stack $stack from ${from_release:-<none>} to $to ($target_version)"
 atomic_symlink "releases/$to" "$base/current"
 compose_cmd "$stack" "$base/current" up -d --remove-orphans
@@ -81,6 +86,7 @@ url="http://127.0.0.1:${port}/healthz"
 if poll_health "$url" "$target_version" "$target_commit" "$timeout" "$interval"; then
 	write_deployed_json "$deployed_json" "$stack" "$to" "$target_version" "$target_commit" \
 		"$target_image" "$deployed_by" "$from_release" "healthy" "manual rollback from ${from_release:-<none>}"
+	clear_deploy_marker "$base"
 	log "rollback complete: stack $stack now serving $to ($target_version)"
 	exit 0
 fi
@@ -88,4 +94,5 @@ fi
 log "CRITICAL: rolled back to $to but it is not serving healthy either -- inspect $base and the containers manually"
 write_deployed_json "$deployed_json" "$stack" "$to" "$target_version" "$target_commit" \
 	"$target_image" "$deployed_by" "$from_release" "unhealthy" "manual rollback from ${from_release:-<none>}, target also failed the health gate"
+clear_deploy_marker "$base"
 exit 1
