@@ -35,8 +35,19 @@ RUN pnpm install --offline --frozen-lockfile
 
 ARG APP_VERSION=0.0.0-dev
 ARG APP_COMMIT=unknown
+# The identification block on /privacy and /terms ($lib/legal-entity.ts). These are
+# build-time by nature: `$env/static/public` is inlined by the bundler, so a value
+# mounted at container start would arrive far too late and change nothing. Unset is a
+# supported state (the line is not rendered), which is what a fork's build gets --
+# a legal page must never invent an address.
+ARG PUBLIC_LEGAL_NAME
+ARG PUBLIC_LEGAL_ADDRESS
+ARG PUBLIC_LEGAL_VAT
 ENV APP_VERSION=${APP_VERSION} \
-	APP_COMMIT=${APP_COMMIT}
+	APP_COMMIT=${APP_COMMIT} \
+	PUBLIC_LEGAL_NAME=${PUBLIC_LEGAL_NAME} \
+	PUBLIC_LEGAL_ADDRESS=${PUBLIC_LEGAL_ADDRESS} \
+	PUBLIC_LEGAL_VAT=${PUBLIC_LEGAL_VAT}
 
 RUN pnpm build
 

@@ -104,9 +104,18 @@ jobs:
           context: .
           file: docker/Dockerfile
           push: true
+          # PUBLIC_LEGAL_*: the operator identification block on /privacy and /terms.
+          # Held as repository secrets rather than committed, since the address is a
+          # sole trader's home address and a git history is permanent -- the rendered
+          # page is public by design, the repository is not. A missing secret is an
+          # empty build arg, which renders the block without that line rather than
+          # failing, so a fork deploys fine.
           build-args: |
             APP_VERSION=${{ needs.verify-ci.outputs.version }}
             APP_COMMIT=${{ needs.verify-ci.outputs.sha }}
+            PUBLIC_LEGAL_NAME=${{ secrets.PUBLIC_LEGAL_NAME }}
+            PUBLIC_LEGAL_ADDRESS=${{ secrets.PUBLIC_LEGAL_ADDRESS }}
+            PUBLIC_LEGAL_VAT=${{ secrets.PUBLIC_LEGAL_VAT }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.verify-ci.outputs.version }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.verify-ci.outputs.sha }}
