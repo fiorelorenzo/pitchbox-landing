@@ -17,7 +17,22 @@ process.env.PUBLIC_SIGNUP_OPEN ??= 'false';
 // own `$env/static/public` import resolves.
 process.env.PUBLIC_APP_ORIGIN ??= 'https://app.pitchbox.app';
 
+// __APP_VERSION__ / __APP_COMMIT__: the deploy health gate (see docker/ in the sibling
+// deploy PR) compares what /healthz reports against what it just built, which only
+// proves anything if the served value cannot change without a rebuild. Reading
+// `process.env.APP_VERSION` at *request* time let a mounted runtime env override it -
+// proven on the box: starting the built image with APP_VERSION=SHOULD_NOT_APPEAR made
+// /healthz report exactly that. `define` replaces these identifiers with a literal at
+// build time instead, so nothing short of a rebuild can change the served value.
+// Unset in dev (no real build), which is honest rather than inventing a fake version.
+const buildVersion = process.env.APP_VERSION ?? null;
+const buildCommit = process.env.APP_COMMIT ?? null;
+
 export default defineConfig({
+	define: {
+		__APP_VERSION__: JSON.stringify(buildVersion),
+		__APP_COMMIT__: JSON.stringify(buildCommit)
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit({
