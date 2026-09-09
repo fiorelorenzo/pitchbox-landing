@@ -28,3 +28,12 @@ export const OG_LOCALE: Record<Locale, string> = { en: 'en_US', it: 'it_IT' };
 export function localeFromPathname(pathname: string): Locale {
 	return pathname === '/it' || pathname.startsWith('/it/') ? 'it' : 'en';
 }
+
+/** The inverse of `localeFromPathname`: `path` (locale-neutral, always starting with
+ * `/` - `'/'`, `'/privacy'`) turned into `locale`'s real route. Shared by `Seo.svelte`
+ * (alternate links) and the sitemap route (#426), so the `/it` prefix rule has exactly
+ * one implementation. */
+export function localizedPath(path: string, locale: Locale): string {
+	if (path === '/') return locale === 'it' ? '/it' : '/';
+	return locale === 'it' ? `/it${path}` : path;
+}
