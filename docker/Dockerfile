@@ -56,10 +56,19 @@ WORKDIR /app
 
 ARG APP_VERSION=0.0.0-dev
 ARG APP_COMMIT=unknown
-# Baked in at build time, not read from the runtime environment: the deploy health gate
-# (see docker/deploy/compose.deploy.yml and scripts/deploy/release.sh) compares the
-# *served* version against the built artifact, which only means something if it cannot
-# be overridden by whatever .env happens to be mounted at boot.
+# `ENV` sets the default APP_VERSION/APP_COMMIT baked at build time -- but it is only
+# a default. Standard Docker semantics: `docker run -e APP_VERSION=X` or an `env_file`
+# entry overrides it at container start, same as any other ENV var, and nothing here
+# stops that. Verified while proving this image for #422: booting it with
+# `-e APP_VERSION=SHOULD_NOT_APPEAR -e APP_COMMIT=SHOULD_NOT_APPEAR` makes /healthz
+# report exactly that. The deploy health gate (docker/deploy/compose.deploy.yml,
+# scripts/deploy/release.sh) only means what it claims -- that the release now serving
+# is the artifact that was built -- because compose.deploy.yml's own `environment:`
+# block never sets these two, not because Docker enforces immutability; it does not.
+# The real fix is on the app side: bake APP_VERSION/APP_COMMIT into the build output
+# itself so /healthz can't read a runtime override at all. Tracked and being fixed
+# there; do not paper over this gap from the deploy side (e.g. by trying to strip the
+# vars here) once that lands -- confirm the app no longer reads them from env.
 ENV APP_VERSION=${APP_VERSION} \
 	APP_COMMIT=${APP_COMMIT} \
 	NODE_ENV=production \
