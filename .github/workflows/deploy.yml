@@ -1,0 +1,157 @@
+# Tag-triggered deploy, following the same immutable-release and health-gate shape
+# canonry-landing's own .github/workflows/deploy.yml uses (~/projects/personal/canonry-landing,
+# the reference implementation named in #422): build once on a GitHub-hosted runner,
+# deploy on the self-hosted runner that lives on prodbox itself, gate on the served
+# version actually matching what was built, and keep releases immutable so a rollback
+# is a symlink flip plus a container recreate.
+#
+# Adapted to this single-app, single-stack repository: scripts/deploy/release.sh and
+# verify-ci.sh are this repository's own copies (ported from canonry-landing, see their
+# own header comments), pointed at this repository's docker/deploy/compose.deploy.yml,
+# which has no database to bundle. Only one stack exists today, prod on port 5184;
+# 127.0.0.1:5284 is reserved for a second stack (see docker/Caddyfile.example), not yet
+# built, so this workflow has no stack selector until that second stack is decided.
+#
+# This repository is public, so the build job runs on GitHub-hosted minutes at no cost;
+# only the actual release step needs the self-hosted `prodbox` runner.
+name: Deploy
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Tag to deploy (defaults to the ref this run was triggered on)
+        required: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/pitchbox-landing
+  DEPLOY_BASE: /opt/apps/pitchbox-landing/prod
+  DEPLOY_PORT: 5184
+
+jobs:
+  # Refuses to go any further unless the exact commit this tag points at has a
+  # completed, successful run of ci.yml. A tag can be pushed at any commit, including
+  # one CI never saw, so this is not redundant with ci.yml's own branch-protection role.
+  verify-ci:
+    name: Refuse a tag without a green CI run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Resolve the commit this tag points at
+        id: resolve
+        run: |
+          tag="${{ inputs.ref || github.ref_name }}"
+          sha=$(git rev-parse "${tag}^{commit}")
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "version=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Verify CI is a completed success for that commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          scripts/deploy/verify-ci.sh \
+            --repo "${{ github.repository }}" \
+            --sha "${{ steps.resolve.outputs.sha }}" \
+            --workflow ci.yml
+
+  # Builds the runtime image once and pushes it to GHCR tagged with both the release
+  # version and the commit sha. The self-hosted deploy job below pulls this exact image
+  # by digest -- it never rebuilds on prodbox.
+  build:
+    name: Build and push the runtime image
+    runs-on: ubuntu-latest
+    needs: verify-ci
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.ref }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.verify-ci.outputs.sha }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ needs.verify-ci.outputs.version }}
+            APP_COMMIT=${{ needs.verify-ci.outputs.sha }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.verify-ci.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.verify-ci.outputs.sha }}
+
+      - name: Pin the deploy reference to this build's digest
+        id: image
+        run: echo "ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}" >> "$GITHUB_OUTPUT"
+
+  # Runs on prodbox itself, via this repository's own scripts/deploy/release.sh.
+  # releases/<sha> is written once and never touched again; the health gate compares
+  # what /healthz actually serves against this exact build, and a failed gate rolls
+  # back automatically.
+  deploy:
+    name: Deploy to prodbox and gate on the served version
+    runs-on: [self-hosted, prodbox]
+    needs: [verify-ci, build]
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.verify-ci.outputs.sha }}
+
+      - name: Release
+        run: |
+          scripts/deploy/release.sh \
+            --stack prod \
+            --base "${{ env.DEPLOY_BASE }}" \
+            --sha "${{ needs.verify-ci.outputs.sha }}" \
+            --version "${{ needs.verify-ci.outputs.version }}" \
+            --image "${{ needs.build.outputs.image }}" \
+            --port "${{ env.DEPLOY_PORT }}" \
+            --deployed-by "github-actions ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Deploy to prod"
+            echo
+            if [ -f "${{ env.DEPLOY_BASE }}/DEPLOYED.json" ]; then
+              echo '```json'
+              cat "${{ env.DEPLOY_BASE }}/DEPLOYED.json"
+              echo '```'
+            else
+              echo "no ${{ env.DEPLOY_BASE }}/DEPLOYED.json found"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

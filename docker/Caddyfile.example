@@ -1,0 +1,28 @@
+# Example Caddy config for prodbox. Caddy is the only thing facing the internet: the
+# container port is bound to 127.0.0.1, and Caddy runs on the host (not inside
+# docker/deploy/compose.deploy.yml), terminating TLS and reverse-proxying to the
+# loopback port this stack's container published.
+#
+# Copy into /etc/caddy/Caddyfile alongside the pitchbox repo's own blue-green Caddy
+# config - the two are independent, unrelated blocks - and reload Caddy. The host and
+# port below are already this stack's real values, nothing to replace.
+#
+# landing.pitchbox.app is this stack's first deployed host, not the apex. The apex
+# (pitchbox.app) and www.pitchbox.app keep pointing at the pitchbox repo's own
+# blue-green stack until #425 builds this landing's real pages; that vhost flip is
+# deliberately out of scope here, so this file does not configure pitchbox.app or
+# www.pitchbox.app.
+#
+# The DNS record must be grey-clouded (Cloudflare: DNS-only, proxy switch off) rather
+# than orange-clouded, or Caddy cannot complete its own ACME challenge and terminate
+# TLS directly:
+#
+#   landing.pitchbox.app   A/AAAA  <prodbox IP>   ; grey-clouded
+#
+# 127.0.0.1:5284 is reserved for a second stack under this repo (not yet built - see
+# docker/deploy/secrets.env.example); when it exists it gets its own host block here,
+# its own subdomain, and its own grey-clouded DNS record, the same shape as this one.
+
+landing.pitchbox.app {
+	reverse_proxy 127.0.0.1:5184
+}
