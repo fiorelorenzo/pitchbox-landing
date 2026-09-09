@@ -34,12 +34,20 @@
 	>
 		{t.wordmark}
 	</a>
-	<a
-		href={otherLocaleHref}
-		class="text-sm text-muted-foreground hover:text-foreground hover:underline"
-	>
-		{t.switchLanguage}
-	</a>
+	<nav class="flex items-center gap-6">
+		<a
+			href={locale === 'en' ? resolve('/pricing') : resolve('/it/pricing')}
+			class="text-sm text-muted-foreground hover:text-foreground hover:underline"
+		>
+			{t.pricing}
+		</a>
+		<a
+			href={otherLocaleHref}
+			class="text-sm text-muted-foreground hover:text-foreground hover:underline"
+		>
+			{t.switchLanguage}
+		</a>
+	</nav>
 </header>
 
 {@render children()}
