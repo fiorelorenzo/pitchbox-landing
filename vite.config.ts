@@ -17,6 +17,15 @@ process.env.PUBLIC_SIGNUP_OPEN ??= 'false';
 // own `$env/static/public` import resolves.
 process.env.PUBLIC_APP_ORIGIN ??= 'https://app.pitchbox.app';
 
+// The identification block on /privacy and /terms ($lib/legal-entity.ts). The name is
+// public; the postal address and the VAT number are a sole trader's home address and
+// tax number, so they are set on the deploy and never committed. Empty here means the
+// line is not rendered at all, which is why the default is '' rather than a
+// placeholder: a legal page must not invent an address.
+process.env.PUBLIC_LEGAL_NAME ??= 'Lorenzo Fiore';
+process.env.PUBLIC_LEGAL_ADDRESS ??= '';
+process.env.PUBLIC_LEGAL_VAT ??= '';
+
 // __APP_VERSION__ / __APP_COMMIT__: the deploy health gate (see docker/ in the sibling
 // deploy PR) compares what /healthz reports against what it just built, which only
 // proves anything if the served value cannot change without a rebuild. Reading

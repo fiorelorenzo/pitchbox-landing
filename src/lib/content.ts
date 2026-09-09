@@ -22,7 +22,7 @@ export interface LandingContent {
 		selfHost: { heading: string; body: string };
 		cloud: { heading: string; body: string };
 	};
-	footer: { app: string; docs: string; github: string };
+	footer: { app: string; docs: string; github: string; privacy: string; terms: string };
 	nav: { skipToContent: string; wordmark: string; switchLanguage: string };
 }
 
@@ -55,7 +55,13 @@ export const CONTENT: Record<Locale, LandingContent> = {
 				body: "The models are ours and every run carries a spending cap, so there's nothing to provision."
 			}
 		},
-		footer: { app: 'Open the app', docs: 'Docs', github: 'GitHub' },
+		footer: {
+			app: 'Open the app',
+			docs: 'Docs',
+			github: 'GitHub',
+			privacy: 'Privacy',
+			terms: 'Terms'
+		},
 		nav: {
 			skipToContent: 'Skip to content',
 			wordmark: 'Pitchbox',
@@ -90,7 +96,13 @@ export const CONTENT: Record<Locale, LandingContent> = {
 				body: 'I modelli sono nostri e ogni run ha un tetto di spesa, quindi non devi predisporre nulla.'
 			}
 		},
-		footer: { app: "Apri l'app", docs: 'Documentazione', github: 'GitHub' },
+		footer: {
+			app: "Apri l'app",
+			docs: 'Documentazione',
+			github: 'GitHub',
+			privacy: 'Privacy',
+			terms: 'Termini'
+		},
 		nav: {
 			skipToContent: 'Vai al contenuto',
 			wordmark: 'Pitchbox',
