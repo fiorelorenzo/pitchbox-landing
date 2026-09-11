@@ -26,6 +26,23 @@ export interface LandingContent {
 	title: string;
 	description: string;
 	hero: { heading: string; subhead: string; inviteNote: string };
+	/** The objection section (LOR-225): four checkable mechanisms, not an adjective,
+	 * answering "does this read as AI" right after the hero - `shared/src/assist
+	 * /voice-profile.ts`'s MIN_ITEMS_TO_DERIVE floor, `shared/src/style-check.ts`'s
+	 * mechanical + structural repair pass, and the never-auto-send boundary. `proofCta`
+	 * ($lib/cta) is this section's own link into `docs/voice.md`, the page that backs
+	 * every claim here with the file it lives in. */
+	mechanism: {
+		heading: string;
+		items: [string, string, string, string];
+		/** A real before/after pair (a generic draft, the same draft after the voice
+		 * profile and style checker), once one exists to show honestly - Main's
+		 * 27-case measurement (LOR-44) is the "before", the rest of this wave is the
+		 * "after". Optional and unset in both locales today on purpose: a named slot
+		 * this section can receive later without restructuring, never a placeholder
+		 * or an invented sample standing in for the real thing. */
+		beforeAfter?: { beforeLabel: string; before: string; afterLabel: string; after: string };
+	};
 	loop: {
 		heading: string;
 		steps: [string, string, string];
@@ -61,6 +78,15 @@ export const CONTENT: Record<Locale, LandingContent> = {
 			subhead: 'A self-hosted outreach agent for Reddit, Hacker News, Mastodon and LinkedIn.',
 			inviteNote:
 				'Cloud sign-up is invite-only right now - the button opens an email asking for one. Self-hosting is open today, no invite needed.'
+		},
+		mechanism: {
+			heading: 'The checks behind every draft',
+			items: [
+				"It reads what you've already written before it claims to know your voice. Under three pieces of writing, it says so and stops there, rather than inventing a style.",
+				'A checker in the code strips tells like the em dash before a draft reaches you. No model is asked nicely to skip them - the code just does it.',
+				'If a tell survives that pass anyway, the draft still shows it to you instead of hiding it.',
+				'Nothing sends on its own. The worst a rough draft can do is sit in your inbox until you delete it.'
+			]
 		},
 		loop: {
 			heading: 'How it works',
@@ -128,6 +154,15 @@ export const CONTENT: Record<Locale, LandingContent> = {
 			subhead: 'Un agente di outreach self-hosted per Reddit, Hacker News, Mastodon e LinkedIn.',
 			inviteNote:
 				"L'iscrizione al cloud è per ora solo su invito - il pulsante apre un'email per richiederlo. Il self-hosting è aperto da subito, senza bisogno di invito."
+		},
+		mechanism: {
+			heading: 'I controlli dietro ogni bozza',
+			items: [
+				'Legge quello che hai già scritto prima di dichiarare di conoscere il tuo tono. Sotto i tre testi, lo dice apertamente e si ferma lì, invece di inventarsi uno stile.',
+				'Un controllo nel codice toglie i tic di scrittura, a partire dal trattino lungo, prima che la bozza arrivi a te. Non lo si chiede con garbo a un modello - lo fa il codice.',
+				'Se un tic sopravvive comunque al controllo, la bozza te lo mostra invece di nasconderlo.',
+				'Non invia mai nulla da sola. Il peggio che una bozza approssimativa può fare è restare nella tua inbox finché non la cancelli.'
+			]
 		},
 		loop: {
 			heading: 'Come funziona',

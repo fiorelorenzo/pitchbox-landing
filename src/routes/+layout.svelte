@@ -1,15 +1,18 @@
 <script lang="ts">
 	/**
 	 * Chrome that appears on every route: the skip link, the wordmark, and the
-	 * language switch. `locale` is read from the URL path (`$lib/i18n`), never
-	 * negotiated - `/` is English, `/it` is Italian, and the switch below always
-	 * points at the other locale's home, since this version has exactly one page
-	 * per language (#422; the rest of the story is #425).
+	 * language switch. `locale` is read from the URL path (`$lib/i18n`) - `/` is
+	 * English, `/it` is Italian - and the switch below always points at the other
+	 * locale's home, since this version has exactly one page per language (#422; the
+	 * rest of the story is #425). Clicking it also writes `LOCALE_COOKIE` (LOR-225):
+	 * `src/hooks.server.ts` reads that back on the next visit to a bare entry path,
+	 * so a visitor who explicitly picked a language keeps it even when their
+	 * browser's `Accept-Language` disagrees.
 	 */
 	import '../app.css';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { localeFromPathname, type Locale } from '$lib/i18n';
+	import { localeFromPathname, LOCALE_COOKIE, type Locale } from '$lib/i18n';
 	import { CONTENT } from '$lib/content';
 	import type { Snippet } from 'svelte';
 
@@ -17,7 +20,14 @@
 
 	let locale = $derived<Locale>(localeFromPathname(page.url.pathname));
 	let t = $derived(CONTENT[locale].nav);
+	let otherLocale = $derived<Locale>(locale === 'en' ? 'it' : 'en');
 	let otherLocaleHref = $derived(locale === 'en' ? resolve('/it') : resolve('/'));
+
+	/** One year, `path=/` so it applies to both `/` and `/it`, `SameSite=Lax` so it
+	 * still rides along on the plain top-level navigation this link performs. */
+	function rememberLanguage() {
+		document.cookie = `${LOCALE_COOKIE}=${otherLocale}; path=/; max-age=31536000; samesite=lax`;
+	}
 </script>
 
 <a
@@ -43,6 +53,7 @@
 		</a>
 		<a
 			href={otherLocaleHref}
+			onclick={rememberLanguage}
 			class="text-sm text-muted-foreground hover:text-foreground hover:underline"
 		>
 			{t.switchLanguage}

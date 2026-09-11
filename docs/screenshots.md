@@ -6,7 +6,10 @@ Real captures, not mockups, per #425's brief.
   (`pnpm run dev:web` in the product repository), with demo drafts inserted for the
   shot so no real client name, handle or workspace data ever appears. English UI
   only - the dashboard is not translated, so both locales on this landing reuse
-  the same two images.
+  the same two images. Re-shot for LOR-225 (2026-09-11) against a seeded instance
+  with real-looking drafts and sends: light theme, written into `localStorage`'s
+  `mode-watcher-mode` key before the page loaded (`mode-watcher` resolves the saved
+  theme from there, so emulating `prefers-color-scheme` does nothing).
 - `panel-en.webp`, `panel-it.webp`: the real, shipped `linkedin-comment-assist-panel.svelte`
   component from `extension/src/content/`, mounted through the product's own
   `mountPanel` (`extension/src/content/shared/panel-host.ts`) with a `ready`-phase
@@ -16,3 +19,6 @@ Real captures, not mockups, per #425's brief.
   session (neither available nor appropriate for a page whose whole point is that
   Pitchbox never crawls LinkedIn). One image per locale because the panel's own
   copy - button labels, the drafted comment - renders in the page's language.
+  Still the pre-LOR-211/LOR-208 capture as of LOR-225: getting a real `ready`-phase
+  shot needs the content script wired against a real feed (a follow-up issue owns
+  that), not a re-theme of the file that already exists here.
