@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { planCta, primaryCta, REGISTER_URL, secondaryCta } from './cta';
+import { planCta, primaryCta, proofCta, REGISTER_URL, secondaryCta, VOICE_DOCS_URL } from './cta';
 import { SUPPORT_EMAIL } from './legal';
 
 describe('primaryCta', () => {
@@ -47,5 +47,18 @@ describe('secondaryCta', () => {
 	it('offers the self-host quickstart in the requested language', () => {
 		expect(secondaryCta('en').label).toBe('Read the self-host quickstart');
 		expect(secondaryCta('it').label).toBe('Leggi la guida rapida per il self-hosting');
+	});
+});
+
+describe('proofCta', () => {
+	it('always points at the voice-profile docs page, regardless of locale', () => {
+		expect(proofCta('en')).toEqual({
+			label: 'Read how the voice profile and checker work',
+			href: VOICE_DOCS_URL
+		});
+		expect(proofCta('it')).toEqual({
+			label: 'Leggi come funzionano il profilo del tono e il controllo di stile',
+			href: VOICE_DOCS_URL
+		});
 	});
 });

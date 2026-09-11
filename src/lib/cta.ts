@@ -85,6 +85,25 @@ export function secondaryCta(locale: Locale): CtaLink {
 	return { label: SECONDARY_LABEL[locale], href: QUICKSTART_URL };
 }
 
+/** The docs page that backs the objection section's claims (LOR-225,
+ * `docs/voice.md` in the product repository): every mechanism the landing states
+ * there is spelled out here with the file it lives in. `cleanUrls: true` in that
+ * repo's `docs/.vitepress/config.ts` is what makes the path `/voice` rather than
+ * `/voice.html`. Unaffected by `signupOpen` - the page exists whether or not the
+ * cloud edition is open. */
+export const VOICE_DOCS_URL = 'https://docs.pitchbox.app/voice';
+
+const PROOF_LABEL: Record<Locale, string> = {
+	en: 'Read how the voice profile and checker work',
+	it: 'Leggi come funzionano il profilo del tono e il controllo di stile'
+};
+
+/** The objection section's own CTA: not a signup step, just the receipt for what it
+ * just claimed. */
+export function proofCta(locale: Locale): CtaLink {
+	return { label: PROOF_LABEL[locale], href: VOICE_DOCS_URL };
+}
+
 const PLAN_LABEL: Record<
 	Locale,
 	{ invite: (name: string) => string; open: (name: string) => string }

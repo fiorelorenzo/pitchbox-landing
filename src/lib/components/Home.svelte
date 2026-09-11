@@ -3,13 +3,15 @@
 	 * The one page this version ships (#422/#425), rendered once per locale by
 	 * `/+page.svelte` and `/it/+page.svelte`. Follows #423's approved brief's story in
 	 * order: the hero claims the human-in-the-loop boundary with the category in the
-	 * subhead, the loop and the in-page companion carry the real screenshots
-	 * (`docs/screenshots.md`), the boundary states what it never does, two ways to run
-	 * it follow, and the footer links out. Still no pricing table, no testimonials.
+	 * subhead, the objection section answers "does this read as AI" with the four
+	 * mechanisms behind it (LOR-225), the loop and the in-page companion carry the
+	 * real screenshots (`docs/screenshots.md`), the boundary states what it never
+	 * does, two ways to run it follow, and the footer links out. Still no pricing
+	 * table, no testimonials.
 	 */
 	import { PUBLIC_SIGNUP_OPEN } from '$env/static/public';
 	import { APP_URL, CONTENT, DOCS_URL, GITHUB_URL } from '$lib/content';
-	import { primaryCta, secondaryCta } from '$lib/cta';
+	import { primaryCta, secondaryCta, proofCta } from '$lib/cta';
 	import { resolve } from '$app/paths';
 	import type { Locale } from '$lib/i18n';
 	import Cta from './Cta.svelte';
@@ -21,6 +23,7 @@
 	let signupOpen = $derived(PUBLIC_SIGNUP_OPEN === 'true');
 	let primary = $derived(primaryCta(locale, signupOpen));
 	let secondary = $derived(secondaryCta(locale));
+	let proof = $derived(proofCta(locale));
 	// The two legal pages live on this host, one pair per locale, so unlike the three
 	// footer links above they are internal routes and do need resolve().
 	let privacyHref = $derived(locale === 'en' ? resolve('/privacy') : resolve('/it/privacy'));
@@ -59,6 +62,36 @@
 		{#if !signupOpen}
 			<p class="max-w-xl text-sm text-muted-foreground">{t.hero.inviteNote}</p>
 		{/if}
+	</section>
+
+	<!-- The objection section (LOR-225, right after the hero per #423's "most
+	     important block after the hero"): four checkable mechanisms, not an
+	     adjective - the voice-profile floor, the style checker, what happens when a
+	     tell survives it, and the never-auto-send boundary. Its own CTA is the docs
+	     page naming which file backs each one. -->
+	<section class="mt-20 border-t border-border pt-12">
+		<h2 class="text-2xl font-semibold text-foreground">{t.mechanism.heading}</h2>
+		<ul class="mt-6 flex list-disc flex-col gap-4 pl-5 marker:text-muted-foreground">
+			{#each t.mechanism.items as item (item)}
+				<li class="text-base text-foreground">{item}</li>
+			{/each}
+		</ul>
+		{#if t.mechanism.beforeAfter}
+			{@const pair = t.mechanism.beforeAfter}
+			<div class="mt-8 grid gap-6 sm:grid-cols-2">
+				<div class="rounded-lg border border-border bg-card p-6">
+					<p class="text-xs font-semibold text-muted-foreground uppercase">{pair.beforeLabel}</p>
+					<p class="mt-2 text-sm text-foreground">{pair.before}</p>
+				</div>
+				<div class="rounded-lg border border-border bg-card p-6">
+					<p class="text-xs font-semibold text-muted-foreground uppercase">{pair.afterLabel}</p>
+					<p class="mt-2 text-sm text-foreground">{pair.after}</p>
+				</div>
+			</div>
+		{/if}
+		<div class="mt-8">
+			<Cta cta={proof} variant="secondary" />
+		</div>
 	</section>
 
 	<!-- The loop (#423's story, steps 1-3): real screenshots of the real Inbox, not
