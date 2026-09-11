@@ -55,7 +55,9 @@ here:
 
 - **Scopes** for the subject: the `area:*` values on the Linear issue - `landing`,
   `copy`, `design`, `deploy` - and a comma-separated list when a change spans several
-  (`fix(landing,deploy): ...`).
+  (`fix(landing,deploy): ...`). Leave the scope off for something repo-wide (this file,
+  CI, the release scripts) rather than forcing an area onto it, the way `docs:` and
+  `fix:` already do in the log.
 - **Required check**: the aggregate `ci` context, from the branch ruleset's
   `required_status_checks`.
 - **Merge**: `gh pr merge <n> --squash --delete-branch` is the only method the ruleset
