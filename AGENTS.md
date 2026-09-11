@@ -44,6 +44,27 @@ than labels.
 
 `area:*` values here: `landing`, `copy`, `design`, `deploy`.
 
+## Pull requests
+
+One shape for every repo of mine: `skill://opening-a-pull-request`. The issue and its
+neighbours before the branch, the branch name Linear renders on the issue, Conventional
+Commits in the first person, the body's four sections from
+`.github/PULL_REQUEST_TEMPLATE.md` (Screenshots is never deleted), an independent review
+applied in a second commit, and the card closed only against evidence. What is true only
+here:
+
+- **Scopes** for the subject: the `area:*` values on the Linear issue - `landing`,
+  `copy`, `design`, `deploy` - and a comma-separated list when a change spans several
+  (`fix(landing,deploy): ...`).
+- **Required check**: the aggregate `ci` context, from the branch ruleset's
+  `required_status_checks`.
+- **Merge**: `gh pr merge <n> --squash --delete-branch` is the only method the ruleset
+  allows (`allowed_merge_methods: ["squash"]`). `allow_auto_merge` is off here, so wait
+  for `gh pr checks <n> --watch` before merging rather than arming `--auto`.
+  `delete_branch_on_merge` is on, so nothing needs deleting by hand; local `main` still
+  needs `git checkout main && git pull --ff-only` afterward, since it diverges on every
+  squash.
+
 ## Design and UI
 
 Follows the shared UI pipeline (`ui-brief-first`, `ui-design-tokens`, `ui-visual-review`):
