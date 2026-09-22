@@ -30,10 +30,10 @@ a session make a read call (`list_projects` or `list_issues`) and check the work
 that comes back: filing personal work into a client's tracker cannot be quietly undone.
 
 Two homes, depending on what the change is. Building the site out belongs in
-`pitchbox v1.8 - Landing and project knowledge sources`, milestone `The product around the
-product: landing, sign-up and the pages a visitor expects`. Copy that answers the positioning
-belongs in `pitchbox v2.3 - The draft stops reading as AI`, milestone `Communication: the
-landing answers the objection`.
+`Ship the landing and project knowledge sources`, milestone `Build the landing,
+sign-up and the pages a visitor expects`. Copy that answers the positioning
+belongs in `Make the draft stop reading as AI`, milestone `Answer the objection
+on the landing`.
 
 Every issue sits in a project **and** in a milestone, carries one `type` label, one `repo`
 label, at least one `area:` label and a priority. No exceptions, including an issue filed in
