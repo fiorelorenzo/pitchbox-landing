@@ -44,18 +44,30 @@ than labels.
 
 `area:*` values here: `landing`, `copy`, `design`, `deploy`.
 
-## Pull requests
+## Workflow kit
 
-One shape for every repo of mine: `skill://opening-a-pull-request`. The issue and its
-neighbours before the branch, the branch name Linear renders on the issue, Conventional
-Commits in the first person, the body's four sections from
-`.github/PULL_REQUEST_TEMPLATE.md` (Screenshots is never deleted), an independent review
-applied in a second commit, and the card closed only against evidence. What is true only
-here:
+The procedure for cards, commits and pull requests is the workflow kit's, copied from
+`letsrebase/rebase` (`tooling/workflow-kit/`): the skills `linear-ticket`, `linear-content`
+and `pr-creation` in `.agents/skills/` (a copy in `.claude/skills/` for Claude Code), the
+data in `.github/workflow.json`. `ci` runs `python3 .github/kit/bin/kit.py check` and, on a
+pull request, `python3 .github/kit/bin/pr_lint.py --github`; a hook refuses a malformed
+Linear write in Claude Code and in omp. Do not edit the kit's files here: change the kit,
+then `kit.py sync`. Locally, `python3 .github/kit/bin/preflight` runs `.github/preflight.json`
+on the diff.
+
+The rules in five lines, for an agent with no skills: file the card before the branch;
+Conventional Commits in the first person, the card id as the last line (`LOR-N.`); the PR
+body keeps the template's sections, Screenshots included; its last line is `Linear: LOR-N.`;
+squash merge once `ci` is green; an independent review is applied in a second
+commit before the PR opens, and the card is closed only against evidence (a comment with the
+merge sha and what was verified).
+
+What is true only here:
 
 - **Scopes** for the subject: the `area:*` values on the Linear issue - `landing`,
   `copy`, `design`, `deploy` - and a comma-separated list when a change spans several
-  (`fix(landing,deploy): ...`). Leave the scope off for something repo-wide (this file,
+  (`fix(landing,deploy): ...`); `workflow.json` also allows `agents`, `repo`, `deps` and `ci`
+  (`docs(agents): ...`). Leave the scope off for something repo-wide (this file,
   CI, the release scripts) rather than forcing an area onto it, the way `docs:` and
   `fix:` already do in the log.
 - **Required check**: the aggregate `ci` context, from the branch ruleset's

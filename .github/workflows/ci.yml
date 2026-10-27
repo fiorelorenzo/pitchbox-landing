@@ -123,7 +123,7 @@ jobs:
         run: pnpm check:links
 
   # Heavy: docker build, a booted container. Main-only (see this file's header
-  # comment); reproduced locally by `preflight`'s "image" check (.github/preflight.json),
+  # comment); reproduced locally by `python3 .github/kit/bin/preflight`'s "image" check (.github/preflight.json),
   # which runs the same scripts/ci-image-boot.sh.
   docker-boot:
     name: Build image, verify served health and every public route (#430)
@@ -156,13 +156,36 @@ jobs:
         if: always()
         run: docker rm -f pitchbox-landing-ci || true
 
+  # The workflow kit's copy here matches its manifest, and on a pull request the title and
+  # body follow .github/workflow.json. No paths filter: every PR has a title. pr_lint reads
+  # the PR from the API, so after `gh pr edit` a re-run of the failed jobs checks the new
+  # text without a push. Standard library only; python3 is on the runner.
+  kit:
+    name: kit · check and PR lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # A job-level block replaces the workflow-level one, so `contents: read` is restated.
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+      - name: The kit's copy is intact
+        run: python3 .github/kit/bin/kit.py check
+      - name: The PR's title and body follow .github/workflow.json
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 .github/kit/bin/pr_lint.py --github
+
   # The single job worth looking at. `skipped` counts as passing: a docs-only PR skips
   # `test` and `docker-boot` never runs on a PR at all, and this still goes green
-  # because the filter already proved there was nothing for either to say.
+  # because the filter already proved there was nothing for either to say. `kit` has no
+  # filter and always runs.
   ci:
     name: ci
     if: always()
-    needs: [changes, test, docker-boot]
+    needs: [changes, test, docker-boot, kit]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
