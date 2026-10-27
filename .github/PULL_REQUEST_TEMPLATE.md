@@ -17,7 +17,7 @@ path that is not covered by a test. Delete the section if there is genuinely not
 ## Screenshots
 
 <!-- For anything a person could see: one before-and-after pair per change, composed into a
-single side-by-side image and attached with `gh pr edit <n> --attach`. If nothing visible
+single side-by-side image, referenced by its local path in the body and attached when you open the PR with `gh pr create --attach ./pair-1.png`. If nothing visible
 changed, or a pair cannot be captured, say so and why. Keep this section either way. -->
 
 Linear: LOR-<number>.

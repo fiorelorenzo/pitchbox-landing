@@ -1,38 +1,53 @@
 {
-  "version": 1,
-  "tracker": {
-    "kind": "linear",
-    "workspace": "fiorelorenzo",
-    "team": "Lorenzo Fiore",
-    "prefix": "LOR",
-    "language": "English",
-    "contract": "AGENTS.md",
-    "labels": {
-      "type": ["feature", "fix", "refactor", "chore", "docs", "test", "ci", "design", "security", "spike"],
-      "area": ["area:landing", "area:copy", "area:design", "area:deploy"]
-    }
-  },
-  "github": {
-    "merge": "squash",
-    "required_check": "ci",
-    "review_bots": []
-  },
-  "commits": {
-    "types": ["feat", "fix", "refactor", "perf", "test", "docs", "ci", "chore", "style", "revert"],
-    "scope_required": false,
-    "scopes": ["landing", "copy", "design", "deploy", "agents", "repo", "deps", "ci"]
-  },
-  "pr": {
-    "title_max": 72,
-    "card_line": true,
-    "milestone_card_line": true,
-    "exempt_authors": ["dependabot[bot]", "app/dependabot"],
-    "sections": [
-      {"title": "What this changes", "required": true},
-      {"title": "How I verified it", "required": true},
-      {"title": "Anything a reviewer should look at twice"},
-      {"title": "Screenshots", "required": true, "hint": "For anything a person could see: one before-and-after pair per change, composed into a\nsingle side-by-side image and attached with `gh pr edit <n> --attach`. If nothing visible\nchanged, or a pair cannot be captured, say so and why. Keep this section either way."}
-    ]
-  },
-  "extras": "docs/agents"
+	"version": 1,
+	"tracker": {
+		"kind": "linear",
+		"workspace": "fiorelorenzo",
+		"team": "Lorenzo Fiore",
+		"prefix": "LOR",
+		"language": "English",
+		"contract": "AGENTS.md",
+		"labels": {
+			"type": [
+				"feature",
+				"fix",
+				"refactor",
+				"chore",
+				"docs",
+				"test",
+				"ci",
+				"design",
+				"security",
+				"spike"
+			],
+			"area": ["area:landing", "area:copy", "area:design", "area:deploy"]
+		}
+	},
+	"github": {
+		"merge": "squash",
+		"required_check": "ci",
+		"review_bots": []
+	},
+	"commits": {
+		"types": ["feat", "fix", "refactor", "perf", "test", "docs", "ci", "chore", "style", "revert"],
+		"scope_required": false,
+		"scopes": ["landing", "copy", "design", "deploy", "agents", "repo", "deps", "ci"]
+	},
+	"pr": {
+		"title_max": 72,
+		"card_line": true,
+		"milestone_card_line": true,
+		"exempt_authors": ["dependabot[bot]", "app/dependabot"],
+		"sections": [
+			{ "title": "What this changes", "required": true },
+			{ "title": "How I verified it", "required": true },
+			{ "title": "Anything a reviewer should look at twice" },
+			{
+				"title": "Screenshots",
+				"required": true,
+				"hint": "For anything a person could see: one before-and-after pair per change, composed into a\nsingle side-by-side image, referenced by its local path in the body and attached when you open the PR with `gh pr create --attach ./pair-1.png`. If nothing visible\nchanged, or a pair cannot be captured, say so and why. Keep this section either way."
+			}
+		]
+	},
+	"extras": "docs/agents"
 }

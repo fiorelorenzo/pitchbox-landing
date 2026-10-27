@@ -58,13 +58,16 @@ on the diff.
 The rules in five lines, for an agent with no skills: file the card before the branch;
 Conventional Commits in the first person, the card id as the last line (`LOR-N.`); the PR
 body keeps the template's sections, Screenshots included; its last line is `Linear: LOR-N.`;
-squash merge once `ci` is green.
+squash merge once `ci` is green; an independent review is applied in a second
+commit before the PR opens, and the card is closed only against evidence (a comment with the
+merge sha and what was verified).
 
 What is true only here:
 
 - **Scopes** for the subject: the `area:*` values on the Linear issue - `landing`,
   `copy`, `design`, `deploy` - and a comma-separated list when a change spans several
-  (`fix(landing,deploy): ...`). Leave the scope off for something repo-wide (this file,
+  (`fix(landing,deploy): ...`); `workflow.json` also allows `agents`, `repo`, `deps` and `ci`
+  (`docs(agents): ...`). Leave the scope off for something repo-wide (this file,
   CI, the release scripts) rather than forcing an area onto it, the way `docs:` and
   `fix:` already do in the log.
 - **Required check**: the aggregate `ci` context, from the branch ruleset's
